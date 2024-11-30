@@ -3,12 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <style>
-    svg {
+    body {
+      background-color: #e0f7fa; 
+      margin: 0;
+      color: #004d40; 
       font-family: Arial, sans-serif;
+    }
+    svg {
+      display: block;
+      margin: auto;
     }
     .tooltip {
       position: absolute;
       background-color: white;
+      color: black;
       border: 1px solid #ccc;
       padding: 5px;
       font-size: 12px;
@@ -43,7 +51,7 @@ Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => 
 
   let colorScale = d3.scaleQuantize()
       .domain([0, d3.max(mapData, d => d.popdata)])
-      .range(d3.schemeReds[9]);
+      .range(["#e8f5e9", "#c8e6c9", "#a5d6a7", "#81c784", "#66bb6a", "#4caf50", "#43a047", "#388e3c", "#2e7d32"]); 
 
   let projection = d3.geoMercator()
       .center([103.851959, 1.290270])
@@ -58,7 +66,7 @@ Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => 
       .enter()
       .append("path")
       .attr("d", geopath)
-      .attr("stroke", "black")
+      .attr("stroke", "#004d40")
       .attr("fill", d => colorScale(d.popdata))
       .on("mouseover", function(event, d) {
         d3.select(this).attr("fill", "orange");
