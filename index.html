@@ -4,43 +4,114 @@
   <meta charset="UTF-8">
   <style>
     body {
-      background-color: #e0f7fa;
+      background-color: #87ceeb; 
       margin: 0;
-      color: #004d40; 
       font-family: Arial, sans-serif;
+      color: #004d40; 
+    }
+    h1 {
+      text-align: center;
+      color: white;
+      font-size: 32px;
+      font-weight: bold;
+      font-family: 'Lucida Bright', serif;
+      margin-top: 20px;
     }
     svg {
       display: block;
       margin: auto;
+      width: 80%; 
+      height: auto;
     }
     .tooltip {
       position: absolute;
-      background-color: white;
-      color: black;
-      border: 1px solid #ccc;
-      padding: 5px;
-      font-size: 12px;
+      background-color: rgba(173, 216, 230, 0.8); 
+      color: white;
+      border: 2px solid #004d40;
+      border-radius: 6px;
+      padding: 10px 15px;
+      font-size: 14px;
       pointer-events: none;
       visibility: hidden;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    .legend-container {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background-color: white;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      width: 300px;
+      text-align: center;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    .legend-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+    .legend-bar {
+      position: relative;
+      height: 20px;
+      background: linear-gradient(to right, #e8f5e9, #c8e6c9, #a5d6a7, #81c784, #66bb6a, #4caf50, #43a047, #388e3c, #2e7d32);
+      border: 1px solid #ccc;
+      margin-bottom: 10px;
+    }
+    .legend-bar span {
+      position: absolute;
+      top: 22px; 
+      color: black;
+      font-weight: bold;
+      font-size: 12px;
+    }
+    .legend-bar div {
+      position: absolute;
+      height: 6px;
+      width: 1px;
+      background-color: black;
+      top: 20px;
     }
   </style>
 </head>
 <body>
+
+<h1>Singapore Population Density Distribution in 2023</h1>
+
 <svg></svg>
+
 <div class="tooltip" id="tooltip"></div>
+
+<div class="legend-container">
+  <div class="legend-title">Population Density Scale</div>
+  <div class="legend-bar">
+    <div style="left: 0%;"></div>
+    <div style="left: 16.6%;"></div>
+    <div style="left: 33.3%;"></div>
+    <div style="left: 50%;"></div>
+    <div style="left: 66.6%;"></div>
+    <div style="left: 83.3%;"></div>
+    <span style="left: 0%;">0</span>
+    <span style="left: 16.6%;">20000</span>
+    <span style="left: 33.3%;">40000</span>
+    <span style="left: 50%;">60000</span>
+    <span style="left: 66.6%;">80000</span>
+    <span style="left: 83.3%;">100000</span>
+  </div>
+</div>
+
 <script src="https://d3js.org/d3.v7.min.js"></script>
 
 <script>
-
-let width = 1000, height = 600;
+let width = 800, height = 500;
 
 let svg = d3.select("svg")
-    .attr("viewBox", "0 0 " + width + " " + height)
+    .attr("viewBox", "0 0 " + width + " " + height);
 
 let tooltip = d3.select("#tooltip");
 
 Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => {
-
   let mapData = data[0].features;
   let popData = data[1];
 
@@ -49,13 +120,13 @@ Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => 
     d.popdata = (subzone != undefined) ? parseInt(subzone.Population) : 0;
   });
 
-  let colorScale = d3.scaleQuantize()
-      .domain([0, d3.max(mapData, d => d.popdata)])
-      .range(["#e8f5e9", "#c8e6c9", "#a5d6a7", "#81c784", "#66bb6a", "#4caf50", "#43a047", "#388e3c", "#2e7d32"]); // 绿色渐变
+  let colorScale = d3.scaleLinear()
+      .domain([0, 120000]) 
+      .range(["#e8f5e9", "#2e7d32"]); 
 
   let projection = d3.geoMercator()
       .center([103.851959, 1.290270])
-      .fitExtent([[20, 20], [980, 580]], data[0]);
+      .fitExtent([[20, 20], [780, 480]], data[0]);
 
   let geopath = d3.geoPath().projection(projection);
 
@@ -66,23 +137,26 @@ Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => 
       .enter()
       .append("path")
       .attr("d", geopath)
-      .attr("stroke", "#004d40") 
+      .attr("stroke", "#004d40")
       .attr("stroke-width", 0.5) 
       .attr("fill", d => colorScale(d.popdata))
       .on("mouseover", function(event, d) {
-        d3.select(this).attr("fill", "#43a047");
+        d3.select(this)
+          .attr("fill", "#a5d6a7") 
+          .attr("stroke-width", 2);
         tooltip.style("visibility", "visible")
             .html(`Subzone: ${d.properties.Name}<br>Population: ${d.popdata}`)
             .style("top", (event.pageY + 10) + "px")
             .style("left", (event.pageX + 10) + "px");
       })
       .on("mouseout", function(event, d) {
-        d3.select(this).attr("fill", d => colorScale(d.popdata));
+        d3.select(this)
+          .attr("fill", d => colorScale(d.popdata))
+          .attr("stroke-width", 0.5); 
         tooltip.style("visibility", "hidden");
       });
-
 });
-
 </script>
+
 </body>
 </html>
