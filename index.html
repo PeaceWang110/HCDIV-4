@@ -2,10 +2,24 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <style></style>
+  <style>
+    svg {
+      font-family: Arial, sans-serif;
+    }
+    .tooltip {
+      position: absolute;
+      background-color: white;
+      border: 1px solid #ccc;
+      padding: 5px;
+      font-size: 12px;
+      pointer-events: none;
+      visibility: hidden;
+    }
+  </style>
 </head>
 <body>
 <svg></svg>
+<div class="tooltip" id="tooltip"></div>
 <script src="https://d3js.org/d3.v7.min.js"></script>
 
 <script>
@@ -15,37 +29,50 @@ let width = 1000, height = 600;
 let svg = d3.select("svg")
     .attr("viewBox", "0 0 " + width + " " + height)
 
-// Load external data and boot
+let tooltip = d3.select("#tooltip");
+
 Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => {
 
-let mapData = data[0].features;
-let popData = data[1];
+  let mapData = data[0].features;
+  let popData = data[1];
 
-// Merge pop data with map data
-mapData.forEach(d => {
-  let subzone = popData.find(e => e.Subzone.toUpperCase() == d.properties.Name);
-  d.popdata = (subzone != undefined) ? parseInt(subzone.Population) : 0;
-})
+  mapData.forEach(d => {
+    let subzone = popData.find(e => e.Subzone.toUpperCase() === d.properties.Name);
+    d.popdata = (subzone != undefined) ? parseInt(subzone.Population) : 0;
+  });
 
-console.log(mapData);
+  let colorScale = d3.scaleQuantize()
+      .domain([0, d3.max(mapData, d => d.popdata)])
+      .range(d3.schemeReds[9]);
 
-// Map and projection
-let projection = d3.geoMercator()
-    .center([103.851959, 1.290270])
-    .fitExtent([[20, 20], [980, 580]], data[0]);
+  let projection = d3.geoMercator()
+      .center([103.851959, 1.290270])
+      .fitExtent([[20, 20], [980, 580]], data[0]);
 
-let geopath = d3.geoPath().projection(projection);
+  let geopath = d3.geoPath().projection(projection);
 
-svg.append("g")
-    .attr("id", "districts")
-    .selectAll("path")
-    .data(mapData)
-    .enter()
-    .append("path")
-    .attr("d", geopath)
-    .attr("stroke", "black")
-    .attr("fill", "grey");
-})
+  svg.append("g")
+      .attr("id", "districts")
+      .selectAll("path")
+      .data(mapData)
+      .enter()
+      .append("path")
+      .attr("d", geopath)
+      .attr("stroke", "black")
+      .attr("fill", d => colorScale(d.popdata))
+      .on("mouseover", function(event, d) {
+        d3.select(this).attr("fill", "orange");
+        tooltip.style("visibility", "visible")
+            .html(`Subzone: ${d.properties.Name}<br>Population: ${d.popdata}`)
+            .style("top", (event.pageY + 10) + "px")
+            .style("left", (event.pageX + 10) + "px");
+      })
+      .on("mouseout", function(event, d) {
+        d3.select(this).attr("fill", d => colorScale(d.popdata));
+        tooltip.style("visibility", "hidden");
+      });
+
+});
 
 </script>
 
