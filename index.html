@@ -14,7 +14,7 @@
       color: white;
       font-size: 32px;
       font-weight: bold;
-      font-family: 'Lucida Bright', serif;
+      font-family: 'Helvetica', 'Arial Black', sans-serif; 
       margin-top: 20px;
     }
     svg {
@@ -145,7 +145,7 @@ Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => 
           .attr("fill", "#a5d6a7") 
           .attr("stroke-width", 2);
         tooltip.style("visibility", "visible")
-            .html(`Subzone: ${d.properties.Name}<br>Population: ${d.popdata}`)
+            .html(Subzone: ${d.properties.Name}<br>Population: ${d.popdata})
             .style("top", (event.pageY + 10) + "px")
             .style("left", (event.pageX + 10) + "px");
       })
